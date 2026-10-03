@@ -127,7 +127,7 @@
 
     // Overall efficiency: with no cap and no turning it is just the combined efficiency.
     checkClose("Overall efficiency below full power", calc(10, 60, 0).overallEfficiency, 0.4106592);
-    // At 20 m/s, 85 m: wind power = 108,950,452 W, output 5,000,000 W -> 0.045892.
+    // At 20 m/s, 85 m: wind power = 108,950,433 W, output 5,000,000 W -> 0.045892.
     checkClose("Overall efficiency drops when the 5 MW cap trims output",
       calc(20, 85, 0).overallEfficiency, 0.045892);
     checkClose("Overall efficiency is 0 when waiting", calc(2, 60, 0).overallEfficiency, 0);
@@ -148,6 +148,26 @@
     checkClose("Pitch at 20 m/s, 60 m blades", calc(20, 60, 0).pitchAngleDegrees, 18.326);
     checkClose("Pitch is 30 degrees at 25 m/s", calc(25, 85, 0).pitchAngleDegrees, 30);
     checkClose("Pitch is 90 degrees (edge-on) when shut down", calc(26, 60, 0).pitchAngleDegrees, 90);
+
+    // Energy flow. 60 m blades, 10 m/s: the wind has 6,785,840 W and each stage keeps a share.
+    // By hand: x 0.45 = 3,053,628; x 0.97 = 2,962,019; x 0.96 = 2,843,538; x 0.98 = 2,786,668.
+    const flow = calc(10, 60, 0).energyFlow;
+    checkClose("Flow: wind power", flow.windPowerW, 6785840);
+    checkClose("Flow: after the rotor", flow.afterRotorW, 3053628);
+    checkClose("Flow: after the gearbox", flow.afterGearboxW, 2962019);
+    checkClose("Flow: after the generator", flow.afterGeneratorW, 2843538);
+    checkClose("Flow: reaching the grid", flow.afterGridW, 2786668);
+    checkClose("Flow: nothing spilled below full power", flow.spilledW, 0);
+    // At full power the 5 MW limit spills wind. 85 m blades, 20 m/s: the wind has 108,950,433 W.
+    // Only 5,000,000 / 0.4106592 = 12,175,546 W of it is used, so 96,774,887 W is spilled.
+    const cappedFlow = calc(20, 85, 0).energyFlow;
+    checkClose("Flow at the limit: spilled wind", cappedFlow.spilledW, 96774887);
+    checkClose("Flow at the limit: after the rotor", cappedFlow.afterRotorW, 5478996);
+    checkClose("Flow at the limit: reaching the grid", cappedFlow.afterGridW, 5000000);
+    // When shut down (26 m/s, 60 m: 119,267,926 W in the wind) nothing is used.
+    const stoppedFlow = calc(26, 60, 0).energyFlow;
+    checkClose("Flow when shut down: all wind spilled", stoppedFlow.spilledW, 119267926);
+    checkClose("Flow when shut down: nothing reaches the grid", stoppedFlow.afterGridW, 0);
 
     // State names
     record("State is 'waiting' at 2 m/s", calc(2, 60, 0).state === "waiting", "waiting", calc(2, 60, 0).state);

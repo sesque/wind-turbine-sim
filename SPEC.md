@@ -273,14 +273,15 @@ Don't start a phase until the one before is working.
    *Done when the model matches the outputs (rpm, pitch, stopped) and runs
    smoothly on a phone.*
 
-3. **Scale figure and theme toggle.**
+3. **Charts and diagrams.** *(done)*
+   Add the power curve chart and the energy flow diagram in a separate
+   drawing file (`charts.js`). *Done when both update live, the energy bands
+   add up, and there is a table view of the power curve.*
+
+4. **Scale figure and theme toggle.**
    Add the blade scale figure (person, bus, jumbo jet), the manual light/dark
    toggle, and tidy the phone layout.
    *Done when the blade bar grows with the slider and the theme choice is remembered.*
-
-4. **Charts and diagrams.**
-   Add the power curve chart and the energy flow diagram in a separate
-   drawing file. *Done when both update live and the energy arrows add up.*
 
 5. **Go deeper and challenges.**
    Add the toggle with its extra explanations, and the three challenge
