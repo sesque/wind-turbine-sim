@@ -138,6 +138,17 @@
     checkClose("Rated wind speed, 40 m blades", calc(10, 40, 0).ratedWindSpeedMs, 15.9229);
     checkClose("Rated wind speed, 85 m blades", calc(10, 85, 0).ratedWindSpeedMs, 9.6335);
 
+    // Blade pitch: 0 degrees until full power, then up to 30 degrees at 25 m/s, 90 when shut down.
+    // By hand: 85 m blades have rated speed 9.6335 m/s, so at 17.5 m/s the blades are
+    // (17.5 - 9.6335) / (25 - 9.6335) = 0.5119 of the way, which is 0.5119 x 30 = 15.36 degrees.
+    checkClose("Pitch is 0 in normal wind (8 m/s, 60 m)", calc(8, 60, 0).pitchAngleDegrees, 0);
+    checkClose("Pitch is 0 when waiting", calc(2, 60, 0).pitchAngleDegrees, 0);
+    checkClose("Pitch at 17.5 m/s, 85 m blades", calc(17.5, 85, 0).pitchAngleDegrees, 15.358);
+    // 60 m blades: rated 12.1515 m/s, at 20 m/s: (20 - 12.1515) / 12.8485 x 30 = 18.33 degrees.
+    checkClose("Pitch at 20 m/s, 60 m blades", calc(20, 60, 0).pitchAngleDegrees, 18.326);
+    checkClose("Pitch is 30 degrees at 25 m/s", calc(25, 85, 0).pitchAngleDegrees, 30);
+    checkClose("Pitch is 90 degrees (edge-on) when shut down", calc(26, 60, 0).pitchAngleDegrees, 90);
+
     // State names
     record("State is 'waiting' at 2 m/s", calc(2, 60, 0).state === "waiting", "waiting", calc(2, 60, 0).state);
     record("State is 'generating' at 8 m/s, 60 m", calc(8, 60, 0).state === "generating", "generating", calc(8, 60, 0).state);
