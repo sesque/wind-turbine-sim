@@ -187,9 +187,8 @@ the amount of energy): **Wind → Rotor → Gearbox → Generator → Grid**.
 
 - Built with **three.js** (a library that draws 3D graphics in the browser via WebGL).
 - Tower, nacelle (the box at the top housing the generator), hub and three blades.
-- **Blades spin** at the speed matching the rpm output (slowed down so it looks
-  smooth on screen, as in a film where wheels seem to turn slowly; label this as
-  "not to real speed").
+- **Blades spin** at exactly the rpm shown in the outputs (at most about 14 rpm,
+  slow enough to look smooth on screen, so no slowing-down trick is needed).
 - **Turbine direction** slider rotates the whole nacelle and rotor against a wind
   arrow.
 - **Pitch.** *Pitch* means twisting each blade about its own length. In normal
@@ -197,6 +196,10 @@ the amount of energy): **Wind → Rotor → Gearbox → Generator → Grid**.
   to about 30° at 25 m/s) to catch less wind. Above 25 m/s (shutdown) they go
   to 90° (edge-on, "feathered") and the rotor stops.
 - Blade length changes the blade size relative to the tower.
+- **Landscape.** Flat ground around the tower, rolling hills further away with
+  about 450 trees (pines and round trees) in groves, soft haze in the distance,
+  and clouds that drift with the wind. Trees are drawn with *instancing* (many
+  copies of one shape drawn in one go) to keep phones fast.
 - Drag to orbit the camera, with touch support for phones. Keep the model
   light so it runs on an older phone.
 
@@ -257,25 +260,27 @@ density or efficiencies, user accounts, languages other than English.
 Each phase ends with something that works and can be opened in a browser.
 Don't start a phase until the one before is working.
 
-1. **Physics and tests.**
-   Write `physics.js` (all formulas, constants, operating states, outputs) and
-   `tests.html` checking the numbers against hand calculations. No visuals yet.
-   *Done when all tests show green.*
+1. **Physics, page and tests.** *(done)*
+   `physics.js` (all formulas, constants, operating states, outputs), `tests.html`
+   checking the numbers against hand calculations, and a first page with the
+   three sliders, the visible formula and the number readouts.
+   *Done when all tests show green and moving a slider updates every number.*
 
-2. **Page, inputs and numbers.**
-   Create `index.html`, `style.css`, and `app.js`: the three sliders with word
-   labels, the blade scale figure, the visible formula and the five outputs, all
-   wired to `physics.js`. Add light/dark theme and the phone-first layout.
-   *Done when moving a slider updates every number correctly, on a phone-sized screen.*
+2. **3D turbine.** *(done)*
+   Add three.js from a CDN and `turbine3d.js`: tower, nacelle, hub, three
+   blades turning at the simulated rpm, direction (yaw), blade pitch in strong
+   wind, shutdown, and drag-to-rotate. Pitch comes from `physics.js`.
+   *Done when the model matches the outputs (rpm, pitch, stopped) and runs
+   smoothly on a phone.*
 
-3. **Charts and diagrams.**
+3. **Scale figure and theme toggle.**
+   Add the blade scale figure (person, bus, jumbo jet), the manual light/dark
+   toggle, and tidy the phone layout.
+   *Done when the blade bar grows with the slider and the theme choice is remembered.*
+
+4. **Charts and diagrams.**
    Add the power curve chart and the energy flow diagram in a separate
    drawing file. *Done when both update live and the energy arrows add up.*
-
-4. **3D turbine.**
-   Add three.js from a CDN and `turbine3d.js`: tower, spinning blades, yaw,
-   blade pitch in strong wind, shutdown. *Done when the model matches the
-   outputs (rpm, pitch, stopped) and runs smoothly on a phone.*
 
 5. **Go deeper and challenges.**
    Add the toggle with its extra explanations, and the three challenge

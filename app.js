@@ -66,6 +66,18 @@ function statusMessage(results) {
   }
 }
 
+// A short sentence about the blades (pitch = twisting each blade about its length).
+function pitchNote(results) {
+  if (results.state === "shutdown") {
+    return "The blades are turned edge-on to the wind and have stopped. This is called feathering.";
+  }
+  if (results.pitchAngleDegrees > 0) {
+    return "The blades are pitching (twisting) by " + Math.round(results.pitchAngleDegrees) +
+      "\u00B0 to spill extra wind.";
+  }
+  return "";
+}
+
 function update() {
   const windSpeed = Number(windSlider.value);
   const bladeLength = Number(bladeSlider.value);
@@ -85,9 +97,20 @@ function update() {
   statusElement.textContent = status.text;
   statusElement.className = "status " + status.kind;
 
+  // The 3D turbine. Physics gave us the numbers; turbine3d.js only draws them.
+  Turbine3D.update({
+    bladeLengthMetres: bladeLength,
+    yawDegrees: angle,
+    rotorRpm: results.rotorRpm,
+    pitchDegrees: results.pitchAngleDegrees,
+    windSpeedMs: windSpeed,
+  });
+  document.getElementById("scene-note").textContent = pitchNote(results);
+
   // Number readouts
   document.getElementById("out-power").textContent = formatPower(results.electricPowerW);
   document.getElementById("out-homes").textContent = formatWithCommas(results.homesPowered);
+  document.getElementById("out-pitch").textContent = Math.round(results.pitchAngleDegrees);
   document.getElementById("out-rpm").textContent = results.rotorRpm.toFixed(1);
   document.getElementById("out-tip").textContent = Math.round(results.tipSpeedKmh);
   document.getElementById("out-efficiency").textContent =
@@ -108,6 +131,9 @@ function update() {
         " m/s of the " + windSpeed + " m/s wind. It catches less."
       : "";
 }
+
+// Start the 3D view. If it can't start, the rest of the page still works.
+Turbine3D.init(document.getElementById("scene"));
 
 // Run update() every time any slider moves, and once at the start.
 [windSlider, bladeSlider, angleSlider].forEach(function (slider) {

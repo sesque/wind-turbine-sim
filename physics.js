@@ -29,6 +29,10 @@ const TIP_SPEED_RATIO = 7;
 // Real turbines limit tip speed (noise and safety). 85 m/s is about 306 km/h.
 const MAX_TIP_SPEED_MS = 85;
 
+// Blade pitch = twisting each blade about its own length to catch less wind.
+const MAX_PITCH_DEGREES = 30; // reached at the shutdown speed
+const FEATHERED_PITCH_DEGREES = 90; // blades edge-on to the wind when shut down
+
 // Assumption for "homes powered": an average home uses 1 kW (1000 W) all day.
 const WATTS_PER_HOME = 1000;
 
@@ -62,6 +66,25 @@ function ratedWindSpeedMs(bladeLengthMetres, angleDegrees) {
   );
   const angleRadians = (angleDegrees * Math.PI) / 180;
   return effectiveSpeed / Math.cos(angleRadians);
+}
+
+// How far the blades are twisted. Normal wind: 0 degrees (flat to the wind).
+// Once the turbine is at full power, the blades twist smoothly from 0 degrees at
+// the rated wind speed up to 30 degrees at 25 m/s, spilling the extra wind.
+// In a storm shutdown they turn fully edge-on (90 degrees).
+function pitchAngleDegrees(state, windSpeedMs, ratedSpeedMs) {
+  if (state === "shutdown") {
+    return FEATHERED_PITCH_DEGREES;
+  }
+  if (state !== "full-power") {
+    return 0;
+  }
+  const range = SHUTDOWN_SPEED_MS - ratedSpeedMs;
+  if (range <= 0) {
+    return 0;
+  }
+  const fraction = Math.min(1, Math.max(0, (windSpeedMs - ratedSpeedMs) / range));
+  return MAX_PITCH_DEGREES * fraction;
 }
 
 // ---------- The main function ----------
@@ -103,6 +126,8 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
   const windPowerRealW = windPowerWatts(area, windSpeedMs);
   const overallEfficiency = windPowerRealW > 0 ? electricPowerW / windPowerRealW : 0;
 
+  const ratedSpeed = ratedWindSpeedMs(bladeLengthMetres, angleDegrees);
+
   return {
     state: state,
     sweptAreaM2: area,
@@ -114,7 +139,8 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
     rotorRpm: rotorRpm,
     homesPowered: Math.floor(electricPowerW / WATTS_PER_HOME),
     overallEfficiency: overallEfficiency, // 0 to 1
-    ratedWindSpeedMs: ratedWindSpeedMs(bladeLengthMetres, angleDegrees),
+    ratedWindSpeedMs: ratedSpeed,
+    pitchAngleDegrees: pitchAngleDegrees(state, windSpeedMs, ratedSpeed),
   };
 }
 

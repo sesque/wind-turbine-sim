@@ -13,6 +13,17 @@
   </header>
 
   <main>
+    <!-- The 3D turbine (drawn by turbine3d.js) -->
+    <section class="card wide" aria-labelledby="view-title">
+      <h2 id="view-title">3D view</h2>
+      <div id="scene" class="scene" role="img"
+           aria-label="3D model of a wind turbine. Drag to look around."></div>
+      <p class="hint">
+        Drag to look around. The orange arrow shows which way the wind blows.
+        <span id="scene-note"></span>
+      </p>
+    </section>
+
     <!-- The three things the student controls -->
     <section class="card" aria-labelledby="controls-title">
       <h2 id="controls-title">Controls</h2>
@@ -71,7 +82,12 @@
           <dd><span id="out-tip"></span> <small>km/h</small></dd>
           <p class="hint">How fast the tip of a blade moves.</p>
         </div>
-        <div class="readout wide">
+        <div class="readout">
+          <dt>Blade pitch</dt>
+          <dd><span id="out-pitch"></span>&deg;</dd>
+          <p class="hint">How far each blade is twisted to spill extra wind.</p>
+        </div>
+        <div class="readout">
           <dt>Overall efficiency</dt>
           <dd><span id="out-efficiency"></span></dd>
           <p class="hint">The share of the wind's power that reaches the grid.</p>
@@ -92,7 +108,11 @@
     </section>
   </main>
 
+  <!-- three.js, pinned to version 0.128.0, loaded from a CDN (a public file server) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="physics.js"></script>
+  <script src="turbine3d.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
