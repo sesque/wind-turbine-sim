@@ -128,6 +128,23 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
 
   const ratedSpeed = ratedWindSpeedMs(bladeLengthMetres, angleDegrees);
 
+  // Where the energy goes, stage by stage (all in watts). This feeds the energy
+  // flow diagram. Only the wind the turbine actually uses flows through the
+  // stages. Any wind above the 5 MW limit is "spilled", and if the turbine is
+  // stopped none of the wind is used.
+  const usedWindW = running ? electricPowerW / COMBINED_EFFICIENCY : 0;
+  const afterRotorW = usedWindW * EFFICIENCY_ROTOR;
+  const afterGearboxW = afterRotorW * EFFICIENCY_GEARBOX;
+  const afterGeneratorW = afterGearboxW * EFFICIENCY_GENERATOR;
+  const energyFlow = {
+    windPowerW: windPowerAtTurbineW,
+    spilledW: windPowerAtTurbineW - usedWindW, // not used because of the 5 MW limit or a stopped turbine
+    afterRotorW: afterRotorW,
+    afterGearboxW: afterGearboxW,
+    afterGeneratorW: afterGeneratorW,
+    afterGridW: electricPowerW,
+  };
+
   return {
     state: state,
     sweptAreaM2: area,
@@ -141,6 +158,7 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
     overallEfficiency: overallEfficiency, // 0 to 1
     ratedWindSpeedMs: ratedSpeed,
     pitchAngleDegrees: pitchAngleDegrees(state, windSpeedMs, ratedSpeed),
+    energyFlow: energyFlow,
   };
 }
 

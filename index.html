@@ -95,6 +95,38 @@
       </dl>
     </section>
 
+    <!-- The power curve chart (drawn by charts.js) -->
+    <section class="card wide" aria-labelledby="curve-title">
+      <h2 id="curve-title">Power curve</h2>
+      <p class="hint">How much electricity the turbine makes at each wind speed, for the blade length and direction you chose. The orange dot is the wind right now. Move your mouse or finger over the chart to read it.</p>
+      <div id="power-chart" class="chart"></div>
+      <p class="key">
+        <span class="key-item"><span class="key-line"></span>Power the turbine can make</span>
+        <span class="key-item"><span class="key-dot"></span><span id="now-text"></span></span>
+      </p>
+      <p class="hint" id="zone-text"></p>
+      <details class="table-view">
+        <summary>Show the numbers as a table</summary>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Wind speed (m/s)</th><th scope="col">Power</th></tr></thead>
+            <tbody id="power-table"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- The energy flow diagram (drawn by charts.js) -->
+    <section class="card wide" aria-labelledby="flow-title">
+      <h2 id="flow-title">Where the energy goes</h2>
+      <p class="hint">Wind energy flows from the left (or the top) to the grid. A little is lost at every stage, mostly as heat.</p>
+      <div id="flow-chart" class="chart"></div>
+      <p class="key">
+        <span class="key-item"><span class="key-swatch key-flow"></span>Energy flowing on</span>
+        <span class="key-item"><span class="key-swatch key-loss"></span>Energy lost</span>
+      </p>
+    </section>
+
     <!-- The formula, always visible -->
     <section class="card wide" aria-labelledby="formula-title">
       <h2 id="formula-title">The formula</h2>
@@ -113,6 +145,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="physics.js"></script>
   <script src="turbine3d.js"></script>
+  <script src="charts.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

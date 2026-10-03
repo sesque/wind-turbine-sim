@@ -14,6 +14,9 @@
   --ok-bg: #e2f4e6;
   --scene-sky: #bcd4ea;
   --scene-ground: #6f9b6a;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --grid: #e3e7ed;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +32,9 @@
     --ok-bg: #1d3d26;
     --scene-sky: #0f1a2b;
     --scene-ground: #3d5a44;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --grid: #2c3745;
   }
 }
 
@@ -227,4 +233,169 @@ main {
   .scene {
     aspect-ratio: 16 / 9;
   }
+}
+
+/* ----- Charts (drawn by charts.js) ----- */
+.chart {
+  position: relative;
+  width: 100%;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y; /* sideways finger moves read the chart; up and down still scrolls the page */
+}
+
+.chart text {
+  fill: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.chart .chart-text-muted {
+  fill: var(--muted);
+}
+
+.chart .chart-label {
+  font-weight: 600;
+  paint-order: stroke; /* a thin card-coloured outline keeps text readable over lines */
+  stroke: var(--card);
+  stroke-width: 4px;
+}
+
+.chart-grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+.chart-wash {
+  fill: var(--muted);
+  opacity: 0.1;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--series-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-area {
+  fill: var(--series-1);
+  opacity: 0.1;
+}
+
+.chart-now-line,
+.chart-hover-line {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.chart-now-dot {
+  fill: var(--series-2);
+  stroke: var(--card); /* a 2px ring so the dot stands out from the line */
+  stroke-width: 2;
+}
+
+.chart-hover-dot {
+  fill: var(--series-1);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.chart-tip {
+  position: absolute;
+  pointer-events: none;
+  padding: 0.25rem 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.flow-band {
+  fill: var(--series-1);
+  stroke: var(--card); /* a 2px gap between touching shapes */
+  stroke-width: 2;
+}
+
+.flow-loss {
+  fill: var(--series-2);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.key-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.2rem;
+}
+
+.key-flow {
+  background: var(--series-1);
+}
+
+.key-loss {
+  background: var(--series-2);
+}
+
+.table-view {
+  margin-top: 0.75rem;
+}
+
+.table-view summary {
+  cursor: pointer;
+  padding: 0.5rem 0;
+  min-height: 2.75rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.table-wrap {
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.table-view table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-view th,
+.table-view td {
+  text-align: left;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.key-line {
+  width: 1.25rem;
+  height: 2px;
+  background: var(--series-1);
+}
+
+.key-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--series-2);
 }

@@ -78,6 +78,74 @@ function pitchNote(results) {
   return "";
 }
 
+// ---------- Chart data ----------
+
+// The wind speeds the power curve is worked out at: every 0.25 m/s, plus two
+// points just either side of the cut-in and shutdown speeds so the curve
+// jumps straight up and down there instead of sloping.
+const CURVE_WIND_SPEEDS = (function () {
+  const speeds = [WindPhysics.CUT_IN_SPEED_MS - 0.001, WindPhysics.SHUTDOWN_SPEED_MS + 0.001];
+  for (let speed = 0; speed <= 30; speed += 0.25) {
+    speeds.push(speed);
+  }
+  return speeds.sort(function (a, b) { return a - b; });
+})();
+
+function buildPowerCurve(bladeLength, angle) {
+  return CURVE_WIND_SPEEDS.map(function (speed) {
+    return {
+      windSpeedMs: speed,
+      powerW: WindPhysics.calculate(speed, bladeLength, angle).electricPowerW,
+    };
+  });
+}
+
+// The labelled sections along the bottom of the power curve.
+function buildCurveZones(ratedWindSpeedMs) {
+  const zones = [
+    { fromMs: 0, toMs: WindPhysics.CUT_IN_SPEED_MS, label: "Too calm", isOff: true },
+  ];
+  if (ratedWindSpeedMs < WindPhysics.SHUTDOWN_SPEED_MS) {
+    zones.push({ fromMs: WindPhysics.CUT_IN_SPEED_MS, toMs: ratedWindSpeedMs, label: "Generating", isOff: false });
+    zones.push({ fromMs: ratedWindSpeedMs, toMs: WindPhysics.SHUTDOWN_SPEED_MS, label: "Full power", isOff: false });
+  } else {
+    zones.push({ fromMs: WindPhysics.CUT_IN_SPEED_MS, toMs: WindPhysics.SHUTDOWN_SPEED_MS, label: "Generating", isOff: false });
+  }
+  zones.push({ fromMs: WindPhysics.SHUTDOWN_SPEED_MS, toMs: 30, label: "Shut down", isOff: true });
+  return zones;
+}
+
+// Words under the power curve that explain each section, with its wind speeds.
+function describeZones(ratedWindSpeedMs) {
+  const cutIn = WindPhysics.CUT_IN_SPEED_MS;
+  const shutdown = WindPhysics.SHUTDOWN_SPEED_MS;
+  return "Grey sections: the turbine is off. Too calm below " + cutIn + " m/s. Shut down above " + shutdown +
+    " m/s. Generating from " + cutIn + " to " + ratedWindSpeedMs.toFixed(1) + " m/s. Full power (5 MW limit) from " +
+    ratedWindSpeedMs.toFixed(1) + " to " + shutdown + " m/s.";
+}
+
+// Short plain-language reasons shown under each loss in the energy flow diagram.
+function buildLossNotes(results) {
+  const flow = results.energyFlow;
+  let rotorNotes;
+  if (results.state === "waiting") {
+    rotorNotes = ["not enough wind", "to start"];
+  } else if (results.state === "shutdown") {
+    rotorNotes = ["turbine switched off", "in the storm"];
+  } else if (flow.spilledW > 1) {
+    rotorNotes = ["includes " + formatPower(flow.spilledW), "spilled at the", "5 MW limit"];
+  } else {
+    rotorNotes = ["blades can't catch", "all the wind"];
+  }
+  const running = results.state === "generating" || results.state === "full-power";
+  return [
+    rotorNotes,
+    running ? ["gearbox heat", "and friction"] : [],
+    running ? ["generator heat"] : [],
+    running ? ["cable and", "transformer heat"] : [],
+  ];
+}
+
 function update() {
   const windSpeed = Number(windSlider.value);
   const bladeLength = Number(bladeSlider.value);
@@ -106,6 +174,31 @@ function update() {
     windSpeedMs: windSpeed,
   });
   document.getElementById("scene-note").textContent = pitchNote(results);
+
+  // The two charts. physics.js worked out the numbers; charts.js only draws them.
+  const curvePoints = buildPowerCurve(bladeLength, angle);
+  Charts.drawPowerCurve(document.getElementById("power-chart"), {
+    points: curvePoints,
+    currentWindMs: windSpeed,
+    currentPowerW: results.electricPowerW,
+    zones: buildCurveZones(results.ratedWindSpeedMs),
+    formatPower: formatPower,
+    summary: "Power curve for " + bladeLength + " metre blades. At " + windSpeed +
+      " metres per second the turbine makes " + formatPower(results.electricPowerW) + ".",
+  });
+  document.getElementById("now-text").textContent =
+    "Now: " + windSpeed + " m/s, " + formatPower(results.electricPowerW);
+  document.getElementById("zone-text").textContent = describeZones(results.ratedWindSpeedMs);
+  Charts.fillPowerTable(document.getElementById("power-table"), curvePoints, formatPower);
+
+  const flow = results.energyFlow;
+  Charts.drawEnergyFlow(document.getElementById("flow-chart"), {
+    flow: flow,
+    lossNotes: buildLossNotes(results),
+    formatPower: formatPower,
+    summary: "Energy flow. " + formatPower(flow.windPowerW) + " of wind reaches the blades and " +
+      formatPower(flow.afterGridW) + " reaches the grid.",
+  });
 
   // Number readouts
   document.getElementById("out-power").textContent = formatPower(results.electricPowerW);
