@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wind Turbine Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Wind Turbine Simulator</h1>
+    <p class="intro">Change the wind, the blades and the direction. See how much electricity the turbine makes.</p>
+  </header>
+
+  <main>
+    <!-- The three things the student controls -->
+    <section class="card" aria-labelledby="controls-title">
+      <h2 id="controls-title">Controls</h2>
+
+      <div class="control">
+        <label for="wind">
+          <span>Wind speed</span>
+          <span class="value"><span id="wind-value"></span> m/s &middot; <span id="wind-word"></span></span>
+        </label>
+        <input type="range" id="wind" min="0" max="30" step="0.5" value="8">
+        <p class="hint">m/s means metres per second. 10 m/s is about 36 km/h.</p>
+      </div>
+
+      <div class="control">
+        <label for="blade">
+          <span>Blade length</span>
+          <span class="value"><span id="blade-value"></span> m</span>
+        </label>
+        <input type="range" id="blade" min="40" max="85" step="1" value="60">
+        <p class="hint">Longer blades catch the wind over a bigger circle.</p>
+      </div>
+
+      <div class="control">
+        <label for="angle">
+          <span>Turbine direction vs wind</span>
+          <span class="value"><span id="angle-value"></span>&deg;</span>
+        </label>
+        <input type="range" id="angle" min="0" max="45" step="1" value="0">
+        <p class="hint">0&deg; means the turbine faces the wind head-on.</p>
+      </div>
+    </section>
+
+    <!-- The live results -->
+    <section class="card" aria-labelledby="results-title">
+      <h2 id="results-title">What the turbine makes</h2>
+      <p id="status" class="status ok"></p>
+
+      <dl class="readouts">
+        <div class="readout">
+          <dt>Power</dt>
+          <dd><span id="out-power"></span></dd>
+          <p class="hint">W = watts. 1 MW is a million watts.</p>
+        </div>
+        <div class="readout">
+          <dt>Homes powered</dt>
+          <dd><span id="out-homes"></span></dd>
+          <p class="hint">Counting 1 kW per home.</p>
+        </div>
+        <div class="readout">
+          <dt>Rotor speed</dt>
+          <dd><span id="out-rpm"></span> <small>rpm</small></dd>
+          <p class="hint">rpm = rotations per minute.</p>
+        </div>
+        <div class="readout">
+          <dt>Blade tip speed</dt>
+          <dd><span id="out-tip"></span> <small>km/h</small></dd>
+          <p class="hint">How fast the tip of a blade moves.</p>
+        </div>
+        <div class="readout wide">
+          <dt>Overall efficiency</dt>
+          <dd><span id="out-efficiency"></span></dd>
+          <p class="hint">The share of the wind's power that reaches the grid.</p>
+        </div>
+      </dl>
+    </section>
+
+    <!-- The formula, always visible -->
+    <section class="card wide" aria-labelledby="formula-title">
+      <h2 id="formula-title">The formula</h2>
+      <p class="formula">P = &frac12; &times; &rho; &times; A &times; v&sup3;</p>
+      <p class="hint">
+        P is the power in the wind. &rho; (say "rho") is the weight of air, fixed at 1.2 kg/m&sup3;.
+        A is the circle the blades sweep, in m&sup2;. v is the wind speed.
+      </p>
+      <p class="formula-numbers" id="formula-numbers"></p>
+      <p class="hint" id="formula-note"></p>
+    </section>
+  </main>
+
+  <script src="physics.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
