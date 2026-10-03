@@ -35,6 +35,10 @@ const FEATHERED_PITCH_DEGREES = 90; // blades edge-on to the wind when shut down
 
 // Assumption for "homes powered": an average home uses 1 kW (1000 W) all day.
 const WATTS_PER_HOME = 1000;
+const HOME_KWH_PER_YEAR = (WATTS_PER_HOME / 1000) * 24 * 365; // 1 kW all year = 8,760 kWh
+
+// The Betz limit: no turbine can capture more than 59.3% of the wind's power.
+const BETZ_LIMIT = 0.593;
 
 // ---------- Small building-block functions ----------
 
@@ -114,11 +118,11 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
   const electricPowerW = running ? Math.min(uncappedElectricW, RATED_POWER_W) : 0;
 
   // Blade tip speed: 7 x the wind the turbine feels, but never above the limit.
-  const tipSpeedMs = running
-    ? Math.min(TIP_SPEED_RATIO * effectiveSpeed, MAX_TIP_SPEED_MS)
-    : 0;
+  const tipSpeedBeforeLimitMs = running ? TIP_SPEED_RATIO * effectiveSpeed : 0;
+  const tipSpeedMs = Math.min(tipSpeedBeforeLimitMs, MAX_TIP_SPEED_MS);
   // One rotation makes the tip travel a full circle of length 2 x pi x L.
-  const rotorRpm = (tipSpeedMs / (2 * Math.PI * bladeLengthMetres)) * 60;
+  const rotorCircumferenceM = 2 * Math.PI * bladeLengthMetres;
+  const rotorRpm = (tipSpeedMs / rotorCircumferenceM) * 60;
 
   // Overall efficiency compares electricity out with the power in the wind
   // blowing at the real wind speed. It drops when the turbine is turned away
@@ -139,6 +143,12 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
   const energyFlow = {
     windPowerW: windPowerAtTurbineW,
     spilledW: windPowerAtTurbineW - usedWindW, // not used because of the 5 MW limit or a stopped turbine
+    // What is lost at each of the four steps (these plus afterGridW add up to windPowerW).
+    notCapturedW: windPowerAtTurbineW - afterRotorW, // the rotor's own loss plus any spilled wind
+    rotorLossW: usedWindW - afterRotorW, // the rotor's own loss only
+    gearboxLossW: afterRotorW - afterGearboxW,
+    generatorLossW: afterGearboxW - afterGeneratorW,
+    gridLossW: afterGeneratorW - electricPowerW,
     afterRotorW: afterRotorW,
     afterGearboxW: afterGearboxW,
     afterGeneratorW: afterGeneratorW,
@@ -148,9 +158,13 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
   return {
     state: state,
     sweptAreaM2: area,
+    directionFactor: Math.cos((angleDegrees * Math.PI) / 180), // 1 when facing the wind
     effectiveWindSpeedMs: effectiveSpeed,
     windPowerW: windPowerAtTurbineW,
+    uncappedElectricW: uncappedElectricW, // what it would make with no 5 MW limit
     electricPowerW: electricPowerW,
+    tipSpeedBeforeLimitMs: tipSpeedBeforeLimitMs, // 7 x the wind, before the 85 m/s limit
+    rotorCircumferenceM: rotorCircumferenceM,
     tipSpeedMs: tipSpeedMs,
     tipSpeedKmh: tipSpeedMs * 3.6, // 1 m/s = 3.6 km/h
     rotorRpm: rotorRpm,
@@ -162,10 +176,39 @@ function calculate(windSpeedMs, bladeLengthMetres, angleDegrees) {
   };
 }
 
+// ---------- Comparing two situations (used by the challenge questions) ----------
+
+// Each situation is { windSpeedMs, bladeLengthMetres, angleDegrees }.
+// How many times more power the second situation makes than the first.
+function powerChangeFactor(firstSituation, secondSituation) {
+  const first = calculate(
+    firstSituation.windSpeedMs, firstSituation.bladeLengthMetres, firstSituation.angleDegrees
+  );
+  const second = calculate(
+    secondSituation.windSpeedMs, secondSituation.bladeLengthMetres, secondSituation.angleDegrees
+  );
+  return second.electricPowerW / first.electricPowerW;
+}
+
+// How much power (in percent) is lost when going from the first situation to the second.
+function percentPowerLost(firstSituation, secondSituation) {
+  return (1 - powerChangeFactor(firstSituation, secondSituation)) * 100;
+}
+
 // One tidy bundle so other files write WindPhysics.calculate(...).
 const WindPhysics = {
   AIR_DENSITY_KG_M3: AIR_DENSITY_KG_M3,
   COMBINED_EFFICIENCY: COMBINED_EFFICIENCY,
+  EFFICIENCY_ROTOR: EFFICIENCY_ROTOR,
+  EFFICIENCY_GEARBOX: EFFICIENCY_GEARBOX,
+  EFFICIENCY_GENERATOR: EFFICIENCY_GENERATOR,
+  EFFICIENCY_GRID: EFFICIENCY_GRID,
+  TIP_SPEED_RATIO: TIP_SPEED_RATIO,
+  MAX_TIP_SPEED_MS: MAX_TIP_SPEED_MS,
+  WATTS_PER_HOME: WATTS_PER_HOME,
+  HOME_KWH_PER_YEAR: HOME_KWH_PER_YEAR,
+  BETZ_LIMIT: BETZ_LIMIT,
+  MAX_PITCH_DEGREES: MAX_PITCH_DEGREES,
   CUT_IN_SPEED_MS: CUT_IN_SPEED_MS,
   SHUTDOWN_SPEED_MS: SHUTDOWN_SPEED_MS,
   RATED_POWER_W: RATED_POWER_W,
@@ -174,4 +217,6 @@ const WindPhysics = {
   windPowerWatts: windPowerWatts,
   ratedWindSpeedMs: ratedWindSpeedMs,
   calculate: calculate,
+  powerChangeFactor: powerChangeFactor,
+  percentPowerLost: percentPowerLost,
 };

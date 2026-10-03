@@ -169,6 +169,48 @@
     checkClose("Flow when shut down: all wind spilled", stoppedFlow.spilledW, 119267926);
     checkClose("Flow when shut down: nothing reaches the grid", stoppedFlow.afterGridW, 0);
 
+    // The losses at each step add up. 60 m blades, 10 m/s (wind 6,785,840 W):
+    // rotor keeps 45%, so it loses 3,732,212; gearbox 3% of 3,053,628 = 91,609;
+    // generator 4% of 2,962,019 = 118,481; grid 2% of 2,843,538 = 56,871.
+    checkClose("Loss at the rotor", flow.notCapturedW, 3732212);
+    checkClose("Loss at the gearbox", flow.gearboxLossW, 91609);
+    checkClose("Loss at the generator", flow.generatorLossW, 118481);
+    checkClose("Loss in the grid connection", flow.gridLossW, 56871);
+    checkClose("Losses plus electricity add up to the wind power",
+      flow.notCapturedW + flow.gearboxLossW + flow.generatorLossW + flow.gridLossW + flow.afterGridW,
+      6785840);
+    // At the 5 MW limit the rotor's own loss is 55% of the wind actually used (12,175,546 W),
+    // which is 6,696,550 W, and the rest of the "not captured" wind is the spilled wind.
+    checkClose("Limit: rotor's own loss", cappedFlow.rotorLossW, 6696550);
+    checkClose("Limit: not captured = rotor loss + spilled",
+      cappedFlow.notCapturedW, cappedFlow.rotorLossW + cappedFlow.spilledW);
+
+    // Comparing two situations (the challenge questions).
+    // Wind doubles: 6 -> 12 m/s with 60 m blades gives 8 times the power (2 x 2 x 2).
+    checkClose("powerChangeFactor: wind 6 -> 12 m/s",
+      WindPhysics.powerChangeFactor(
+        { windSpeedMs: 6, bladeLengthMetres: 60, angleDegrees: 0 },
+        { windSpeedMs: 12, bladeLengthMetres: 60, angleDegrees: 0 }), 8);
+    // Blade length doubles: 40 -> 80 m at 8 m/s gives 4 times the power (2 x 2).
+    checkClose("powerChangeFactor: blades 40 -> 80 m",
+      WindPhysics.powerChangeFactor(
+        { windSpeedMs: 8, bladeLengthMetres: 40, angleDegrees: 0 },
+        { windSpeedMs: 8, bladeLengthMetres: 80, angleDegrees: 0 }), 4);
+    // Turned 45 degrees at 10 m/s, 60 m: keeps 0.35355, so loses 64.645%.
+    checkClose("percentPowerLost: turned 45 degrees",
+      WindPhysics.percentPowerLost(
+        { windSpeedMs: 10, bladeLengthMetres: 60, angleDegrees: 0 },
+        { windSpeedMs: 10, bladeLengthMetres: 60, angleDegrees: 45 }), 64.645);
+
+    // Numbers used by the "Go deeper" working.
+    // 60 m blades at 8 m/s: the tip would go 7 x 8 = 56 m/s; the circle is 2 x pi x 60 = 376.99 m.
+    checkClose("Tip speed before the limit (8 m/s)", calc(8, 60, 0).tipSpeedBeforeLimitMs, 56);
+    checkClose("Rotor circle length (60 m blades)", calc(8, 60, 0).rotorCircumferenceM, 376.99);
+    // At 15 m/s the wish is 7 x 15 = 105 m/s, but the limit is 85 m/s.
+    checkClose("Tip speed before the limit (15 m/s)", calc(15, 60, 0).tipSpeedBeforeLimitMs, 105);
+    checkClose("Direction factor at 45 degrees", calc(10, 60, 45).directionFactor, 0.70711);
+    checkClose("Energy a home uses in a year (kWh)", WindPhysics.HOME_KWH_PER_YEAR, 8760);
+
     // State names
     record("State is 'waiting' at 2 m/s", calc(2, 60, 0).state === "waiting", "waiting", calc(2, 60, 0).state);
     record("State is 'generating' at 8 m/s, 60 m", calc(8, 60, 0).state === "generating", "generating", calc(8, 60, 0).state);

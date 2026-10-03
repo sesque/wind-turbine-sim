@@ -24,6 +24,7 @@ style.css      all styling, light/dark via CSS variables
 physics.js     ALL physics: constants, formulas, states, outputs
 app.js         reads inputs, calls physics, updates the page
 charts.js      power curve and energy flow drawing
+challenges.js  the three challenge questions and answer checking
 turbine3d.js   three.js model
 tests.html     checks the physics numbers
 SPEC.md        what the app does
