@@ -196,6 +196,10 @@ the amount of energy): **Wind → Rotor → Gearbox → Generator → Grid**.
   to about 30° at 25 m/s) to catch less wind. Above 25 m/s (shutdown) they go
   to 90° (edge-on, "feathered") and the rotor stops.
 - Blade length changes the blade size relative to the tower.
+- **Landscape.** Flat ground around the tower, rolling hills further away with
+  about 450 trees (pines and round trees) in groves, soft haze in the distance,
+  and clouds that drift with the wind. Trees are drawn with *instancing* (many
+  copies of one shape drawn in one go) to keep phones fast.
 - Drag to orbit the camera, with touch support for phones. Keep the model
   light so it runs on an older phone.
 

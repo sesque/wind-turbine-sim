@@ -103,6 +103,7 @@ function update() {
     yawDegrees: angle,
     rotorRpm: results.rotorRpm,
     pitchDegrees: results.pitchAngleDegrees,
+    windSpeedMs: windSpeed,
   });
   document.getElementById("scene-note").textContent = pitchNote(results);
 
