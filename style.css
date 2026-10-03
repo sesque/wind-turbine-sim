@@ -1,0 +1,192 @@
+/* style.css: all the colours and layout.
+   Colours are CSS variables (named values defined once, used everywhere).
+   Dark mode follows the device setting. */
+
+:root {
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --text: #1a2332;
+  --muted: #4f5d70;
+  --accent: #0b6bcb;
+  --border: #cfd6e0;
+  --track: #cfd6e0;
+  --warn-bg: #fff3d6;
+  --ok-bg: #e2f4e6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11161d;
+    --card: #1b232d;
+    --text: #e9eef5;
+    --muted: #a5b1c2;
+    --accent: #5aa9ff;
+    --border: #36414f;
+    --track: #36414f;
+    --warn-bg: #4a3b12;
+    --ok-bg: #1d3d26;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem; /* 16px */
+  line-height: 1.5;
+}
+
+header,
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 1rem 0 0.25rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.75rem;
+}
+
+.intro {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+/* Phone first: one column. Two columns on wider screens. */
+main {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 48rem) {
+  main {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+/* ----- Sliders ----- */
+.control {
+  margin-bottom: 1.25rem;
+}
+
+.control:last-child {
+  margin-bottom: 0;
+}
+
+.control label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.control .value {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.control input[type="range"] {
+  width: 100%;
+  height: 2.75rem; /* at least 44px tall so fingers can grab it */
+  margin: 0.25rem 0 0;
+  accent-color: var(--accent);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+/* ----- Formula ----- */
+.formula {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.formula-numbers {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg);
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+/* ----- Status message ----- */
+.status {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.status.ok {
+  background: var(--ok-bg);
+}
+
+.status.warn {
+  background: var(--warn-bg);
+}
+
+/* ----- Readouts ----- */
+.readouts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.readout {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.readout.wide {
+  grid-column: 1 / -1;
+}
+
+.readout dt {
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.readout dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.readout dd small {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.readout .hint {
+  font-size: 0.875rem;
+}

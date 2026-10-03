@@ -120,9 +120,10 @@ the wind's power (the **Betz limit**), so 45% is realistic and good.
 - **Rated power** = the maximum the generator is allowed to produce (5 MW = 5 000 000 W).
 - **Rated wind speed** = the speed at which the cap is first reached. It is
   **not a fixed number in the code**; it comes out of the maths and depends on
-  blade length. With a ~63 m blade it is about 12 m/s (the "about 12 m/s" in
-  the brief). Longer blades reach 5 MW in lighter wind; blades near 40 m never
-  reach it. The app should show the current rated wind speed so students see this.
+  blade length. With a ~63 m blade it is about 11.8 m/s (the "about 12 m/s" in
+  the brief). Longer blades reach 5 MW in lighter wind (85 m: about 9.6 m/s);
+  shorter ones need stronger wind (40 m: about 15.9 m/s). The app should show
+  the current rated wind speed so students see this.
 
 ### 4.5 Calculation order
 

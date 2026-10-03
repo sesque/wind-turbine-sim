@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Physics tests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem; line-height: 1.4; }
+    #summary { font-size: 1.25rem; font-weight: 700; padding: 0.5rem 0.75rem; border-radius: 0.5rem; }
+    #summary.pass { background: #cdeed5; color: #0b3d1a; }
+    #summary.fail { background: #f7cdcd; color: #5a0a0a; }
+    table { border-collapse: collapse; margin-top: 1rem; width: 100%; max-width: 60rem; }
+    th, td { border: 1px solid #999; padding: 0.35rem 0.5rem; text-align: left; vertical-align: top; }
+    td.PASS { color: #0b6b2a; font-weight: 700; }
+    td.FAIL { color: #b00020; font-weight: 700; }
+    td.num { font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <h1>Physics tests</h1>
+  <p>Each row checks one number from <code>physics.js</code> against an answer worked out by hand.</p>
+  <p id="summary">Running&hellip;</p>
+  <table>
+    <thead>
+      <tr><th>Result</th><th>What is checked</th><th>Expected</th><th>Actual</th></tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
+
+  <script src="physics.js"></script>
+  <script>
+    // ---------- Tiny test helpers ----------
+    const rows = [];
+
+    function record(name, passed, expected, actual) {
+      rows.push({ name: name, passed: passed, expected: expected, actual: actual });
+    }
+
+    // Numbers are decimals that are never perfectly exact, so we accept a tiny
+    // difference (0.1%) instead of demanding an exact match.
+    function checkClose(name, actual, expected) {
+      const allowedError = expected === 0 ? 1e-9 : Math.abs(expected) * 0.001;
+      record(name, Math.abs(actual - expected) <= allowedError, expected, actual);
+    }
+
+    // For "never more than" style checks.
+    function checkAtMost(name, actual, limit) {
+      record(name, actual <= limit, "at most " + limit, actual);
+    }
+
+    function checkAbove(name, actual, limit) {
+      record(name, actual > limit, "more than " + limit, actual);
+    }
+
+    const calc = WindPhysics.calculate; // calc(windSpeed m/s, bladeLength m, angle degrees)
+
+    // ---------- The four main checks ----------
+
+    // 1. Below the cut-in speed (3 m/s) there is no power.
+    checkClose("Power is zero at 0 m/s", calc(0, 60, 0).electricPowerW, 0);
+    checkClose("Power is zero at 2 m/s", calc(2, 60, 0).electricPowerW, 0);
+    checkClose("Power is zero at 2.9 m/s (just below cut-in)", calc(2.9, 60, 0).electricPowerW, 0);
+    // Exactly 3 m/s counts as running. By hand: 0.5 x 1.2 x 11309.73 x 27 x 0.41066 = 75,240 W.
+    checkClose("Power at exactly 3 m/s is running (60 m blades)", calc(3, 60, 0).electricPowerW, 75240);
+
+    // 2. Doubling the wind speed gives 8 times the power (2 x 2 x 2), as long as
+    //    the 5 MW cap is not reached. By hand: 6 m/s -> 601,920 W, 12 m/s -> 4,815,362 W.
+    checkClose("Power at 6 m/s, 60 m blades", calc(6, 60, 0).electricPowerW, 601920);
+    checkClose("Power at 12 m/s, 60 m blades", calc(12, 60, 0).electricPowerW, 4815362);
+    checkClose(
+      "Doubling wind 6 -> 12 m/s gives 8 times the power",
+      calc(12, 60, 0).electricPowerW / calc(6, 60, 0).electricPowerW,
+      8
+    );
+
+    // 3. Power never goes above 5 MW. Try many combinations.
+    let highestPowerW = 0;
+    for (let wind = 0; wind <= 30; wind += 0.5) {
+      for (let blade = 40; blade <= 85; blade += 5) {
+        for (let angle = 0; angle <= 45; angle += 15) {
+          highestPowerW = Math.max(highestPowerW, calc(wind, blade, angle).electricPowerW);
+        }
+      }
+    }
+    checkAtMost("Power never exceeds 5 MW (all combinations tried)", highestPowerW, 5000000);
+    // The cap is really used: 85 m blades at 20 m/s would make far more than 5 MW uncapped.
+    checkClose("85 m blades at 20 m/s are held at exactly 5 MW", calc(20, 85, 0).electricPowerW, 5000000);
+
+    // 4. Above the shutdown speed (25 m/s) there is no power.
+    // Exactly 25 m/s is still running: 85 m blades give the full 5 MW.
+    checkClose("Power at exactly 25 m/s is still running (85 m blades)", calc(25, 85, 0).electricPowerW, 5000000);
+    checkClose("Power is zero at 25.5 m/s", calc(25.5, 85, 0).electricPowerW, 0);
+    checkClose("Power is zero at 30 m/s", calc(30, 85, 0).electricPowerW, 0);
+    checkClose("Shutdown also applies when the turbine is turned 45 degrees", calc(26, 60, 45).electricPowerW, 0);
+
+    // ---------- Other checks from CLAUDE.md ----------
+
+    // Swept area, 60 m: pi x 60 x 60 = 11,309.73 m2.
+    checkClose("Swept area for 60 m blades", WindPhysics.sweptAreaM2(60), 11309.73);
+    // Power in the wind, 60 m blades, 10 m/s: 0.5 x 1.2 x 11309.73 x 1000 = 6,785,840 W.
+    checkClose("Wind power for 60 m blades at 10 m/s",
+      WindPhysics.windPowerWatts(11309.73, 10), 6785840);
+
+    // Combined efficiency: 0.45 x 0.97 x 0.96 x 0.98 = 0.4107 (about 41%).
+    checkClose("Combined efficiency", WindPhysics.COMBINED_EFFICIENCY, 0.4106592);
+    // Electricity at 10 m/s: 6,785,840 x 0.4106592 = 2,786,668 W.
+    checkClose("Electric power at 10 m/s, 60 m blades", calc(10, 60, 0).electricPowerW, 2786668);
+
+    // Direction: cos(45 degrees) is 0.7071, and power uses it cubed -> 0.35355.
+    checkClose("Turned 45 degrees keeps 0.35355 of the power",
+      calc(10, 60, 45).electricPowerW / calc(10, 60, 0).electricPowerW, 0.35355);
+
+    // Tip speed and rotor speed, 60 m blades, 6 m/s: tip = 7 x 6 = 42 m/s = 151.2 km/h.
+    // One circle is 2 x pi x 60 = 376.99 m, so rpm = 42 / 376.99 x 60 = 6.6845.
+    checkClose("Tip speed at 6 m/s (km/h)", calc(6, 60, 0).tipSpeedKmh, 151.2);
+    checkClose("Rotor speed at 6 m/s (rpm)", calc(6, 60, 0).rotorRpm, 6.6845);
+    // At 15 m/s, 7 x 15 = 105 m/s is over the 85 m/s limit, so tip = 85 m/s = 306 km/h.
+    // rpm = 85 / 376.99 x 60 = 13.528.
+    checkClose("Tip speed is limited at 15 m/s (km/h)", calc(15, 60, 0).tipSpeedKmh, 306);
+    checkClose("Rotor speed at 15 m/s (rpm)", calc(15, 60, 0).rotorRpm, 13.528);
+    checkClose("Rotor speed is zero when waiting", calc(2, 60, 0).rotorRpm, 0);
+    checkClose("Rotor speed is zero when shut down", calc(27, 60, 0).rotorRpm, 0);
+
+    // Homes powered: 2,786,668 W / 1000 W per home = 2786.7, rounded down to 2786.
+    checkClose("Homes powered at 10 m/s, 60 m blades", calc(10, 60, 0).homesPowered, 2786);
+    checkClose("Homes powered is 5000 at full power", calc(20, 85, 0).homesPowered, 5000);
+
+    // Overall efficiency: with no cap and no turning it is just the combined efficiency.
+    checkClose("Overall efficiency below full power", calc(10, 60, 0).overallEfficiency, 0.4106592);
+    // At 20 m/s, 85 m: wind power = 108,950,452 W, output 5,000,000 W -> 0.045892.
+    checkClose("Overall efficiency drops when the 5 MW cap trims output",
+      calc(20, 85, 0).overallEfficiency, 0.045892);
+    checkClose("Overall efficiency is 0 when waiting", calc(2, 60, 0).overallEfficiency, 0);
+
+    // Rated wind speed (where 5 MW is first reached), worked out by hand:
+    // cube root of 5,000,000 / (0.6 x area x 0.4106592).
+    checkClose("Rated wind speed, 63 m blades", calc(10, 63, 0).ratedWindSpeedMs, 11.7626);
+    checkClose("Rated wind speed, 40 m blades", calc(10, 40, 0).ratedWindSpeedMs, 15.9229);
+    checkClose("Rated wind speed, 85 m blades", calc(10, 85, 0).ratedWindSpeedMs, 9.6335);
+
+    // State names
+    record("State is 'waiting' at 2 m/s", calc(2, 60, 0).state === "waiting", "waiting", calc(2, 60, 0).state);
+    record("State is 'generating' at 8 m/s, 60 m", calc(8, 60, 0).state === "generating", "generating", calc(8, 60, 0).state);
+    record("State is 'full-power' at 20 m/s, 85 m", calc(20, 85, 0).state === "full-power", "full-power", calc(20, 85, 0).state);
+    record("State is 'shutdown' at 26 m/s", calc(26, 60, 0).state === "shutdown", "shutdown", calc(26, 60, 0).state);
+
+    // The three challenge answers from SPEC.md.
+    // 1. Wind doubles (6 -> 12 m/s, 60 m): 8 times (already checked above, repeated for the challenge).
+    checkClose("Challenge 1: wind doubles, power is 8 times",
+      calc(12, 60, 0).electricPowerW / calc(6, 60, 0).electricPowerW, 8);
+    // 2. Blade length doubles (40 -> 80 m at 8 m/s): 2 x 2 = 4 times. By hand: 634,122 W -> 2,536,487 W.
+    checkClose("Challenge 2: blade length doubles, power is 4 times",
+      calc(8, 80, 0).electricPowerW / calc(8, 40, 0).electricPowerW, 4);
+    // 3. Turned 45 degrees: keeps 0.35355, so about 65% is lost (0.64645).
+    checkClose("Challenge 3: turned 45 degrees loses about 65%",
+      1 - calc(10, 60, 45).electricPowerW / calc(10, 60, 0).electricPowerW, 0.64645);
+
+    // ---------- Show the results on the page ----------
+    function format(value) {
+      return typeof value === "number" ? String(Number(value.toPrecision(7))) : value;
+    }
+
+    const tableBody = document.getElementById("results");
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const cells = [
+        { text: row.passed ? "PASS" : "FAIL", className: row.passed ? "PASS" : "FAIL" },
+        { text: row.name, className: "" },
+        { text: format(row.expected), className: "num" },
+        { text: format(row.actual), className: "num" },
+      ];
+      cells.forEach(function (cell) {
+        const td = document.createElement("td");
+        td.textContent = cell.text;
+        td.className = cell.className;
+        tr.appendChild(td);
+      });
+      tableBody.appendChild(tr);
+    });
+
+    const failedCount = rows.filter(function (row) { return !row.passed; }).length;
+    const summary = document.getElementById("summary");
+    summary.textContent = failedCount === 0
+      ? "All " + rows.length + " checks passed"
+      : failedCount + " of " + rows.length + " checks FAILED";
+    summary.className = failedCount === 0 ? "pass" : "fail";
+  </script>
+</body>
+</html>
