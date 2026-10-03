@@ -283,7 +283,7 @@ Don't start a phase until the one before is working.
    toggle, and tidy the phone layout.
    *Done when the blade bar grows with the slider and the theme choice is remembered.*
 
-5. **Go deeper and challenges.**
+5. **Go deeper and challenges.** *(done)*
    Add the toggle with its extra explanations, and the three challenge
    questions with hints and progress. *Done when answers are checked using
    `physics.js` and the toggle setting is remembered.*

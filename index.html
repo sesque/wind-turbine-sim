@@ -10,12 +10,19 @@
   <header>
     <h1>Wind Turbine Simulator</h1>
     <p class="intro">Change the wind, the blades and the direction. See how much electricity the turbine makes.</p>
+    <!-- Switches the extra "step by step" explanations on and off -->
+    <label class="switch" for="go-deeper">
+      <input type="checkbox" id="go-deeper" role="switch">
+      <span class="switch-track" aria-hidden="true"></span>
+      <span class="switch-text">Go deeper <small>(show the maths step by step)</small></span>
+    </label>
   </header>
 
   <main>
     <!-- The 3D turbine (drawn by turbine3d.js) -->
     <section class="card wide" aria-labelledby="view-title">
       <h2 id="view-title">3D view</h2>
+      <p class="explain">This is your turbine. The blades turn at the speed worked out for your wind, and turn edge-on in a storm.</p>
       <div id="scene" class="scene" role="img"
            aria-label="3D model of a wind turbine. Drag to look around."></div>
       <p class="hint">
@@ -27,6 +34,7 @@
     <!-- The three things the student controls -->
     <section class="card" aria-labelledby="controls-title">
       <h2 id="controls-title">Controls</h2>
+      <p class="explain">Three things decide how much electricity a turbine makes: how hard the wind blows, how long the blades are, and whether the turbine faces the wind.</p>
 
       <div class="control">
         <label for="wind">
@@ -59,7 +67,15 @@
     <!-- The live results -->
     <section class="card" aria-labelledby="results-title">
       <h2 id="results-title">What the turbine makes</h2>
+      <p class="explain">These numbers change as you move the sliders. The big number is the one to watch.</p>
       <p id="status" class="status ok"></p>
+
+      <!-- The headline number -->
+      <div class="hero">
+        <p class="hero-label">Homes powered</p>
+        <p class="hero-value" id="out-homes"></p>
+        <p class="hint" id="homes-note"></p>
+      </div>
 
       <dl class="readouts">
         <div class="readout">
@@ -68,9 +84,9 @@
           <p class="hint">W = watts. 1 MW is a million watts.</p>
         </div>
         <div class="readout">
-          <dt>Homes powered</dt>
-          <dd><span id="out-homes"></span></dd>
-          <p class="hint">Counting 1 kW per home.</p>
+          <dt>Overall efficiency</dt>
+          <dd><span id="out-efficiency"></span></dd>
+          <p class="hint">The share of the wind's power that reaches the grid.</p>
         </div>
         <div class="readout">
           <dt>Rotor speed</dt>
@@ -87,18 +103,18 @@
           <dd><span id="out-pitch"></span>&deg;</dd>
           <p class="hint">How far each blade is twisted to spill extra wind.</p>
         </div>
-        <div class="readout">
-          <dt>Overall efficiency</dt>
-          <dd><span id="out-efficiency"></span></dd>
-          <p class="hint">The share of the wind's power that reaches the grid.</p>
-        </div>
       </dl>
+
+      <div class="deeper">
+        <h3>Go deeper: how fast the blades turn</h3>
+        <ol class="steps" id="speed-steps"></ol>
+      </div>
     </section>
 
     <!-- The power curve chart (drawn by charts.js) -->
     <section class="card wide" aria-labelledby="curve-title">
       <h2 id="curve-title">Power curve</h2>
-      <p class="hint">How much electricity the turbine makes at each wind speed, for the blade length and direction you chose. The orange dot is the wind right now. Move your mouse or finger over the chart to read it.</p>
+      <p class="explain">Each point on the line is the power the turbine makes at that wind speed, for the blades and direction you chose. The orange dot is the wind you chose. Move your mouse or finger over the chart to read it.</p>
       <div id="power-chart" class="chart"></div>
       <p class="key">
         <span class="key-item"><span class="key-line"></span>Power the turbine can make</span>
@@ -114,22 +130,40 @@
           </table>
         </div>
       </details>
+
+      <div class="deeper">
+        <h3>Go deeper: why these limits?</h3>
+        <ul class="steps" id="limit-steps"></ul>
+      </div>
     </section>
 
     <!-- The energy flow diagram (drawn by charts.js) -->
     <section class="card wide" aria-labelledby="flow-title">
       <h2 id="flow-title">Where the energy goes</h2>
-      <p class="hint">Wind energy flows from the left (or the top) to the grid. A little is lost at every stage, mostly as heat.</p>
+      <p class="explain">Wind energy goes in on one side. A little is lost at each stage, mostly as heat. What is left reaches the grid (the power network that carries electricity to homes).</p>
       <div id="flow-chart" class="chart"></div>
       <p class="key">
         <span class="key-item"><span class="key-swatch key-flow"></span>Energy flowing on</span>
         <span class="key-item"><span class="key-swatch key-loss"></span>Energy lost</span>
       </p>
+
+      <div class="deeper">
+        <h3>Go deeper: the efficiency chain</h3>
+        <p class="hint">Efficiency is the share of energy that gets through a stage. Each stage keeps a share and loses the rest.</p>
+        <div class="table-wrap">
+          <table class="plain-table">
+            <thead><tr><th scope="col">Stage</th><th scope="col">Keeps</th><th scope="col">Loses now</th></tr></thead>
+            <tbody id="chain-table"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="betz-note"></p>
+      </div>
     </section>
 
     <!-- The formula, always visible -->
     <section class="card wide" aria-labelledby="formula-title">
       <h2 id="formula-title">The formula</h2>
+      <p class="explain">This is the rule for the power in the wind. The wind speed is cubed (multiplied by itself three times), so wind speed matters most.</p>
       <p class="formula">P = &frac12; &times; &rho; &times; A &times; v&sup3;</p>
       <p class="hint">
         P is the power in the wind. &rho; (say "rho") is the weight of air, fixed at 1.2 kg/m&sup3;.
@@ -137,6 +171,20 @@
       </p>
       <p class="formula-numbers" id="formula-numbers"></p>
       <p class="hint" id="formula-note"></p>
+
+      <div class="deeper">
+        <h3>Go deeper: the maths step by step</h3>
+        <ol class="steps" id="formula-steps"></ol>
+        <p class="hint" id="cube-note"></p>
+      </div>
+    </section>
+
+    <!-- The challenge questions (built by challenges.js) -->
+    <section class="card wide" aria-labelledby="challenges-title">
+      <h2 id="challenges-title">Challenges</h2>
+      <p class="explain">Three puzzles. Press the buttons to set the sliders, look at the power, then type your answer.</p>
+      <p class="progress" id="challenge-progress" aria-live="polite"></p>
+      <div id="challenges"></div>
     </section>
   </main>
 
@@ -146,6 +194,7 @@
   <script src="physics.js"></script>
   <script src="turbine3d.js"></script>
   <script src="charts.js"></script>
+  <script src="challenges.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

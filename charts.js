@@ -262,13 +262,11 @@ function drawEnergyFlow(container, data) {
   const flow = data.flow;
   const sideways = width >= FLOW_SIDEWAYS_MIN_WIDTH;
 
-  // The power left after each stage, and the loss at each of the four steps.
+  // The power left after each stage, and the loss at each of the four steps (from physics.js).
   const values = [
     flow.windPowerW, flow.afterRotorW, flow.afterGearboxW, flow.afterGeneratorW, flow.afterGridW,
   ];
-  const losses = [1, 2, 3, 4].map(function (i) {
-    return values[i - 1] - values[i];
-  });
+  const losses = [flow.notCapturedW, flow.gearboxLossW, flow.generatorLossW, flow.gridLossW];
 
   // Layout numbers
   const maxThickness = sideways ? 64 : 52; // thickness of the widest band (the wind)
